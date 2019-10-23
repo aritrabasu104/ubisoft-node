@@ -1,13 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const bodyParser = require('body-parser');
-const mongoose = require('mongoose');
-const ObjectId = mongoose.Types.ObjectId;
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
-const Player = require('./models/Player');
-const Match = require('./models/Match');
-const PlayerStat = require('./models/PlayerStat');
 const UserService = require('./UserService');
 
 // CREATES A NEW USER
@@ -35,32 +30,38 @@ router.post('/playerStat', (req, res) => {
 // RETURNS ALL STATS  IN THE DATABASE FOR A PLAYER
 router.get('/playerStats/:id', function (req, res) {
     UserService.getPlayerStats(req.params.id).then((
-        playersStats) => res.status(200).send(playersStats))
+        playersStats) => res.status(200).send(playersStats.map(item => {
+            const obj = item.toObject();
+            delete obj.rank;
+            return obj;
+        })))
         .catch(err => res.status(500).send(err.message + " : There was a problem finding the player Stats."));
 });
 
 // RETURNS STATS FOR A MATCH WITHIN THE TIME
 router.get('/playerStats', function (req, res) {
     UserService.getStatsForMatch(req.query.matchName , req.query.timeInMillis).then((
-        playersStats) => res.status(200).send(playersStats))
+        playersStats) => res.status(200).send(playersStats.map(item => {
+            const obj = item.toObject();
+            delete obj.rank;
+            return obj;
+        })))
         .catch(err => res.status(500).send(err.message + " : There was a problem finding the match Stats."));
 });
 
 // RETURNS ALL THE PLAYERS IN THE DATABASE
 router.get('/players', function (req, res) {
     UserService.getAllPlayers().then(players => res.status(200).send(players))
-        .catch(err => res.status(500).send("There was a problem finding the players."));
+        .catch(err => res.status(500).send(err.message+ " : There was a problem finding the players."));
 
 });
 
 // RETURNS ALL THE MATCHES IN THE DATABASE
 router.get('/matches', function (req, res) {
-    Match.find({}, function (err, matches) {
-        if (err) return res.status(500).send("There was a problem finding the matches.");
+    UserService.findAllMatches().then(matches => {
         res.status(200).send(matches);
-    });
+    }).catch(err => res.status(500).send(err.message+ " : There was a problem finding the matches."));
 });
-
 
 // RETURNS THE LEADERBOARD FOR MATCH AND TIME LIMIT
 router.get('/LeaderBoard', function (req, res) {

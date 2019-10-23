@@ -9,6 +9,16 @@ const PlayerStatSchema = new mongoose.Schema({
   score: { type: Number, required: true },
   rank: Number,
   statTime: Number
+},
+{
+  toObject: {
+      transform: function (doc, ret) {
+          delete ret._id;
+          delete ret.__v;
+          delete ret.match;
+          delete ret.statTime;
+      }
+  }
 });
 mongoose.model('PlayerStat', PlayerStatSchema);
 

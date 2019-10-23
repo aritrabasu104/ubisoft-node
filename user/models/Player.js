@@ -8,7 +8,7 @@ const PlayerSchema = new mongoose.Schema({
 }, {
     toObject: {
         transform: function (doc, ret) {
-            delete ret;
+            delete ret.__v;
         }
     }
 });

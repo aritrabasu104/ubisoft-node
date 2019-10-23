@@ -106,6 +106,9 @@ class UserService {
             });
         });
     }
+    findAllMatches(){
+        return Match.find({}).exec();
+    }
 }
 const instance = new UserService();
 
