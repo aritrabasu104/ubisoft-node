@@ -36,9 +36,15 @@ router.post('/playerStat', (req, res) => {
 router.get('/playerStats/:id', function (req, res) {
     UserService.getPlayerStats(req.params.id).then((
         playersStats) => res.status(200).send(playersStats))
-        .catch(err => res.status(500).send(err.message + " : There was a problem finding the playersStats."));
+        .catch(err => res.status(500).send(err.message + " : There was a problem finding the player Stats."));
 });
 
+// RETURNS STATS FOR A MATCH WITHIN THE TIME
+router.get('/playerStats', function (req, res) {
+    UserService.getStatsForMatch(req.query.matchName , req.query.timeInMillis).then((
+        playersStats) => res.status(200).send(playersStats))
+        .catch(err => res.status(500).send(err.message + " : There was a problem finding the match Stats."));
+});
 
 // RETURNS ALL THE PLAYERS IN THE DATABASE
 router.get('/players', function (req, res) {
@@ -63,22 +69,11 @@ router.get('/LeaderBoard', function (req, res) {
         .catch(err => res.status(500).send(err.message + " There was a problem finding the Leaderboard."));;
 });
 
-// RETURNS THE LEADERBOARD FOR MATCH AND TIME LIMIT
+// RETURNS ADJACENT SCORES FOR THE USER
 router.get('/LeaderBoard/:id', function (req, res) {
-    Match.find({ matchName: req.query.matchName }, function (err, matches) {
-        if (err) return res.status(500).send("There was a problem finding the matches.");
-        if (matches.length === 0) return res.status(404).send("Invalid match name provided.");
-        PlayerStat.find({ match: matches[0] }, function (err, playerStats) {
-            if (err) return res.status(500).send("There was a problem finding the stats.");
-            const targetPlayer = playerStats.filter(stat => {
-                return stat.player.toString() === req.params.id
-            });
-            if (targetPlayer.length === 0) res.status(404).send("Invalid Player Id provided.");
-            const targetRank = targetPlayer[0].rank;
-            const result = playerStats.filter(stat => stat.rank <= (targetRank + 2) && stat.rank >= (targetRank - 2))
-            res.status(200).send(result);
-        });
-    });
+    UserService.getAdjacendScoresForUser(req.params.id , req.query.matchName)
+    .then(playerStats => res.status(200).send(playerStats))
+    .catch(err => res.status(500).send(err.message + " There was a problem finding the Leaderboard."));;
 });
 
 

@@ -81,6 +81,31 @@ class UserService {
             })
         });
     }
+
+    // RETURNS ADJACENT SCORES FOR THE USER
+    getAdjacendScoresForUser(userId, matchName) {
+        return Match.find({ matchName }).exec().then(matches => {
+            if (matches.length === 0) throw new Error("Invalid match name provided.");
+            return PlayerStat.find({ match: matches[0] }).exec().then(playerStats => {
+                const targetPlayer = playerStats.filter(stat => {
+                    return stat.player.toString() === userId
+                });
+                if (targetPlayer.length === 0) throw new Error("Invalid Player Id provided.");
+                const targetRank = targetPlayer[0].rank;
+                return playerStats.filter(stat => stat.rank <= (targetRank + 2) && stat.rank >= (targetRank - 2))
+            });
+        });
+    }
+
+    // RETURNS STATS FOR A MATCH WITHIN THE TIME
+    getStatsForMatch(matchName, timeInMillis) {
+        return Match.find({ matchName }).exec().then(matches => {
+            if (matches.length === 0) throw new Error("Invalid match name provided.");
+            return PlayerStat.find({ match: matches[0] }).exec().then(playerStats => {
+                return playerStats.filter(item => item.statTime > timeInMillis).sort((item1, item2) => item2.score - item1.score).slice(0, 99)
+            });
+        });
+    }
 }
 const instance = new UserService();
 
