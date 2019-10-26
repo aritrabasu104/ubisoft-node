@@ -3,6 +3,7 @@ const ObjectId = mongoose.Types.ObjectId;
 const Player = require('./models/Player');
 const Match = require('./models/Match');
 const PlayerStat = require('./models/PlayerStat');
+const CustomError = require('../Errors/CustomError');
 
 class UserService {
     // CREATES A NEW PLAYER
@@ -18,7 +19,7 @@ class UserService {
         let currentMatch;
         return Match.find({ matchName }).exec().then(matches => {
             // if (err) return res.status(500).send(err.message + " : There was a problem finding the match.");
-            if (matches.length === 0) return res.status(404).send("Invalid match name provided.");
+            if (matches.length === 0) throw new CustomError("Invalid match name provided.",404);
             currentMatch = matches[0];
             return PlayerStat.find({
                 player: ObjectId(playerId),
@@ -75,7 +76,7 @@ class UserService {
     // RETURNS THE LEADERBOARD FOR MATCH AND TIME LIMIT
     getMatchLeaderboard(matchName, timeInMillis) {
         return Match.find({ matchName }).exec().then(matches => {
-            if (matches.length === 0) throw new Error("Invalid match name provided.");
+            if (matches.length === 0) throw new CustomError("Invalid match name provided.", 404);
             return PlayerStat.find({ match: matches[0] }).exec().then(playerStats => {
                 return playerStats.filter(item => item.statTime > timeInMillis).sort((item1, item2) => item2.score - item1.score).slice(0, 99)
             })
@@ -85,12 +86,12 @@ class UserService {
     // RETURNS ADJACENT SCORES FOR THE USER
     getAdjacendScoresForUser(userId, matchName) {
         return Match.find({ matchName }).exec().then(matches => {
-            if (matches.length === 0) throw new Error("Invalid match name provided.");
+            if (matches.length === 0) throw new CustomError("Invalid match name provided.", 404);
             return PlayerStat.find({ match: matches[0] }).exec().then(playerStats => {
                 const targetPlayer = playerStats.filter(stat => {
                     return stat.player.toString() === userId
                 });
-                if (targetPlayer.length === 0) throw new Error("Invalid Player Id provided.");
+                if (targetPlayer.length === 0) throw new CustomError("Invalid Player Id provided.", 404);
                 const targetRank = targetPlayer[0].rank;
                 return playerStats.filter(stat => stat.rank <= (targetRank + 2) && stat.rank >= (targetRank - 2))
             });
@@ -100,13 +101,13 @@ class UserService {
     // RETURNS STATS FOR A MATCH WITHIN THE TIME
     getStatsForMatch(matchName, timeInMillis) {
         return Match.find({ matchName }).exec().then(matches => {
-            if (matches.length === 0) throw new Error("Invalid match name provided.");
+            if (matches.length === 0) throw new CustomError("Invalid match name provided.", 404);
             return PlayerStat.find({ match: matches[0] }).exec().then(playerStats => {
                 return playerStats.filter(item => item.statTime > timeInMillis).sort((item1, item2) => item2.score - item1.score).slice(0, 99)
             });
         });
     }
-    findAllMatches(){
+    findAllMatches() {
         return Match.find({}).exec();
     }
 }
